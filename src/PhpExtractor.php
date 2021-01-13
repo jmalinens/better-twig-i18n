@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace Acpr\I18n;
 
+use Acpr\I18n\NodeVisitor\GettextPhpNodeVisitor;
 use Acpr\I18n\NodeVisitor\PhpParserNodeVisitor;
+use Acpr\I18n\NodeVisitor\TranslationNodeVisitor;
 use Gettext\Translation;
 use Gettext\Translations;
 use PhpParser\Error;
 use PhpParser\NodeTraverser;
 use PhpParser\ParserFactory;
+use Twig\NodeVisitor\NodeVisitorInterface;
 
 class PhpExtractor extends AbstractFileExtractor implements ExtractorInterface
 {
@@ -17,11 +20,12 @@ class PhpExtractor extends AbstractFileExtractor implements ExtractorInterface
 
     protected const DEFAULT_DOMAIN = 'messages';
     private string $defaultDomain;
+    private string $phpNodeVisitor;
 
-
-    public function __construct(string $defaultDomain = self::DEFAULT_DOMAIN)
+    public function __construct(string $defaultDomain = self::DEFAULT_DOMAIN, string $phpNodeVisitor = PhpParserNodeVisitor::class)
     {
         $this->defaultDomain = $defaultDomain;
+        $this->phpNodeVisitor = $phpNodeVisitor;
     }
 
     /**
@@ -69,7 +73,7 @@ class PhpExtractor extends AbstractFileExtractor implements ExtractorInterface
         $translations = [];
 
         $parser = (new ParserFactory)->create(ParserFactory::PREFER_PHP7);
-        $visitor = new PhpParserNodeVisitor();
+        $visitor = new $this->phpNodeVisitor();
 
         $traverser = new NodeTraverser;
         $traverser->addVisitor($visitor);
